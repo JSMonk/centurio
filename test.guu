@@ -1,0 +1,7 @@
+sub main:
+  set a 2
+  call test
+  print a
+
+sub test:
+  set a 3
