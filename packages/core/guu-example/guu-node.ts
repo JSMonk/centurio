@@ -1,4 +1,3 @@
-import { ASTNodeType } from "../lib/parser/ast-node-type";
 import { GuuASTNodeType } from "./guu-node-type";
 
 export type Node =
@@ -8,11 +7,11 @@ export type Node =
   | GuuProgram;
 
 export class GuuProgram {
-  readonly type = ASTNodeType.SOURCE_FILE;
-  constructor(public readonly statements: Array<GuuProcedureDeclaration>) {}
+  readonly type = GuuASTNodeType.SOURCE_FILE;
+  constructor(public readonly declarations: Array<GuuProcedureDeclaration>) {}
 }
 export class GuuBlock {
-  readonly type = ASTNodeType.BLOCK;
+  readonly type = GuuASTNodeType.BLOCK;
   constructor(public readonly statements: Array<Statement>) {}
 }
 export class GuuProcedureDeclaration {
@@ -22,14 +21,22 @@ export class GuuProcedureDeclaration {
     public readonly body: Array<Statement>
   ) {}
 }
+export class GuuFunctionDeclaration {
+  readonly type = GuuASTNodeType.FUNCTION_DECLARATION;
+  constructor(
+    public readonly identifier: GuuIdentifier,
+    public readonly args: Array<GuuIdentifier>,
+    public readonly body: GuuBlock
+  ) {}
+}
 
 // Statements
 export type Statement = CallStatement | PrintStatement | SetStatement;
 
 export class CallStatement {
-  readonly type = ASTNodeType.CALL;
+  readonly type = GuuASTNodeType.CALL;
   readonly arguments = [];
-  constructor(public readonly expression: GuuIdentifier) {}
+  constructor(public readonly identifier: GuuIdentifier) {}
 }
 export class PrintStatement {
   readonly type = GuuASTNodeType.PRINT;
@@ -46,10 +53,10 @@ export class SetStatement {
 export type Expression = GuuNumber | GuuIdentifier;
 
 export class GuuIdentifier {
-  readonly type = ASTNodeType.IDENTIFIER;
+  readonly type = GuuASTNodeType.IDENTIFIER;
   constructor(public readonly escapedText: string) {}
 }
 export class GuuNumber {
-  readonly type = ASTNodeType.NUMERIC_LITERAL;
+  readonly type = GuuASTNodeType.NUMERIC_LITERAL;
   constructor(public readonly text: string) {}
 }

@@ -1,4 +1,4 @@
-export enum GuuKeyword {
+export const enum GuuKeyword {
   SET = "set",
   CALL = "call",
   PRINT = "print",
