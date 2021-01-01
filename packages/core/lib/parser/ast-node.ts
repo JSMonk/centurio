@@ -1,3 +1,1 @@
-export interface AstNode<T extends string = string> {
-  type: T;
-}
+export interface AstNode<T = string> {}

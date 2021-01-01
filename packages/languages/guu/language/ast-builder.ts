@@ -1,7 +1,7 @@
 import * as nodes from "./guu-node";
 import * as tokens from "./guu-token";
 import { GuuSyntax } from "./syntax-state-machine";
-import { AstBuilder } from "../lib/parser/ast-builder";
+import { AstBuilder } from "../../../core/lib/parser/ast-builder";
 import type { NextHandler } from "./syntax-state-machine";
 import type { Node as GuuNode } from "./guu-node";
 import type { Token as GuuToken } from "./guu-token";
@@ -15,14 +15,16 @@ export class GuuAstBuilder implements AstBuilder<GuuToken, GuuNode> {
     this.syntax.handleSetBy(() => this.pushSetStatement());
     this.syntax.handleCallBy(() => this.pushCallStatement());
     this.syntax.handlePrintBy(() => this.pushPrintStatement());
-    this.syntax.handleIdentifierBy(token => this.pushIdentifierNode(token));
-    this.syntax.handleNumberBy(token => this.pushNumberNode(token));
+    this.syntax.handleIdentifierBy((token) => this.pushIdentifierNode(token));
+    this.syntax.handleNumberBy((token) => this.pushNumberNode(token));
     this.syntax.handleSubprogramBy(() => this.pushProcedureDeclaration());
   }
 
   getFullAST() {
     if (this.currentTokenHandler !== null) {
-      this.currentTokenHandler = this.currentTokenHandler(new tokens.EndOfFile());
+      this.currentTokenHandler = this.currentTokenHandler(
+        new tokens.EndOfFile()
+      );
     }
     return this.createProgram();
   }

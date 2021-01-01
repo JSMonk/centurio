@@ -4,14 +4,14 @@ import { AnalystOpts, NodeAnalyst } from "../analysis/node-analyst";
 import { ChildrenVisitor, VisitorOpts } from "./chilren-visitor";
 import { DesugarerOpts, NodeDesugarer } from "../desugar/node-desugarer";
 
-export class VisitorsRegistry<T extends string, C extends object> {
-  public static create<T extends string, C extends object>() {
+export class VisitorsRegistry<T, C extends object> {
+  public static create<T, C extends object>() {
     return new VisitorsRegistry<T, C>();
   }
 
-  private transformers: Map<string, NodeDesugarer<T, AstNode<T>>> = new Map();
-  private analysts: Map<string, NodeAnalyst<T, C>> = new Map();
-  private childrenVisitors: Map<string, ChildrenVisitor<T, string>> = new Map();
+  private transformers: Map<T, NodeDesugarer<T, AstNode<T>>> = new Map();
+  private analysts: Map<T, NodeAnalyst<T, AstNode<T>, C>> = new Map();
+  private childrenVisitors: Map<T, ChildrenVisitor<T, string>> = new Map();
   private hasBeenFixed: boolean = false;
 
   private constructor() {}
@@ -30,15 +30,21 @@ export class VisitorsRegistry<T extends string, C extends object> {
     return this;
   }
 
-  desugarWhen(opts: DesugarerOpts<T, AstNode<T>>) {
+  desugarWhen<N extends AstNode<T>>(opts: DesugarerOpts<T, N>) {
     this.assertNotFixed();
-    this.transformers.set(opts.type, NodeDesugarer.forNode(opts));
+    this.transformers.set(
+      opts.type,
+      NodeDesugarer.forNode(opts) as NodeDesugarer<T, AstNode<T>>
+    );
     return this;
   }
 
-  analyse(opts: AnalystOpts<T, C>) {
+  analyse<N extends AstNode<T>>(opts: AnalystOpts<T, N, C>) {
     this.assertNotFixed();
-    this.analysts.set(opts.type, NodeAnalyst.forNode(opts));
+    this.analysts.set(
+      opts.type,
+      NodeAnalyst.forNode(opts) as NodeAnalyst<T, AstNode<T>, C>
+    );
     return this;
   }
 
@@ -52,16 +58,10 @@ export class VisitorsRegistry<T extends string, C extends object> {
   }
 }
 
-export class ImmutableVisitorsRegistry<T extends string, C extends object> {
+export class ImmutableVisitorsRegistry<T, C extends object> {
   constructor(
-    public readonly transformers: ReadonlyMap<
-      string,
-      NodeDesugarer<T, AstNode<T>>
-    >,
-    public readonly analysts: ReadonlyMap<string, NodeAnalyst<T, C>>,
-    public readonly childrenVisitors: ReadonlyMap<
-      string,
-      ChildrenVisitor<T, string>
-    >
+    public readonly transformers: ReadonlyMap<T, NodeDesugarer<T, AstNode<T>>>,
+    public readonly analysts: ReadonlyMap<T, NodeAnalyst<T, AstNode<T>, C>>,
+    public readonly childrenVisitors: ReadonlyMap<T, ChildrenVisitor<T, string>>
   ) {}
 }

@@ -1,6 +1,6 @@
 import * as token from "./guu-token";
 import { GuuKeyword } from "./guu-keywords";
-import type { Tokenizer } from "../lib/parser/tokenizer";
+import type { Tokenizer } from "../../../core/lib/parser/tokenizer";
 import type { Token as GuuToken } from "./guu-token";
 
 export class GuuTokenizer implements Tokenizer<GuuToken> {

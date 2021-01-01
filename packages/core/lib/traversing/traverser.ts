@@ -1,24 +1,38 @@
 import { Stack } from "../util/stack";
 import { AstNode } from "../parser/ast-node";
 import { CheckedError } from "../errors/checked-error";
-import { AnalysysContext } from "../analysis/analysis-context";
+import { AnalysisContext } from "../analysis/analysis-context";
 import type { ImmutableVisitorsRegistry } from "./visitors-registry";
 
-export class Traverser<T extends string, E extends CheckedError> {
-  public static create<T extends string, E extends CheckedError>(
-    root: AstNode<T>,
-    context: AnalysysContext<E>,
-    visitorsRegistry: ImmutableVisitorsRegistry<T, AnalysysContext<E>>
+export type TraverserOpts<T, N extends AstNode<T>, E extends CheckedError> = {
+  root: N;
+  context: AnalysisContext<E>;
+  registry: ImmutableVisitorsRegistry<T, AnalysisContext<E>>;
+  getNodeType: (node: N) => T;
+};
+
+export class Traverser<T, N extends AstNode<T>, E extends CheckedError> {
+  public static create<T, N extends AstNode<T>, E extends CheckedError>(
+    opts: TraverserOpts<T, N, E>
   ) {
-    return new Traverser<T, E>(root, context, visitorsRegistry);
+    return new Traverser<T, N, E>(
+      opts.root,
+      opts.getNodeType,
+      opts.context,
+      opts.registry
+    );
   }
 
-  private nodeStack: Stack<AstNode<T>> = new Stack();
+  private nodeStack: Stack<N> = new Stack();
 
   private constructor(
-    private readonly root: AstNode<T>,
-    private readonly context: AnalysysContext<E>,
-    private readonly visitorsRegistry: ImmutableVisitorsRegistry<T, AnalysysContext<E>>
+    private readonly root: N,
+    private readonly getNodeType: (node: N) => T,
+    private readonly context: AnalysisContext<E>,
+    private readonly visitorsRegistry: ImmutableVisitorsRegistry<
+      T,
+      AnalysisContext<E>
+    >
   ) {
     this.nodeStack.push(this.root);
   }
@@ -30,20 +44,22 @@ export class Traverser<T extends string, E extends CheckedError> {
     } = this;
 
     while (stack.isNotEmpty()) {
-      let node: AstNode<T> = stack.pop();
-      const desugarer = transformers.get(node.type);
+      let node: N = stack.pop();
+      let type = this.getNodeType(node);
+      const desugarer = transformers.get(type);
       if (desugarer !== undefined) {
-        node = desugarer.tranformerFunction(node);
+        node = desugarer.tranformerFunction(node) as N;
+        type = this.getNodeType(node);
       }
-      const analyst = analysts.get(node.type);
+      const analyst = analysts.get(type);
       if (analyst !== undefined) {
         analyst.analysisFunction(node, this.context);
       }
-      const childrenVisitor = childrenVisitors.get(node.type);
+      const childrenVisitor = childrenVisitors.get(type);
       if (childrenVisitor !== undefined) {
-        // @ts-expect-error - "lib/analysis/childre-visitor/Node<T>" type should be a subtype of "lib/parser/ast-node.AstNode<T>" 
-        const childrens: Array<AstNode<T>> = childrenVisitor.childrenOf(node);
-        stack.pushAll(childrens);
+        // @ts-expect-error: TypeScript can't inference node as AstNode<T> and { [k: string]: any }
+        const childrens = childrenVisitor.childrenOf(node);
+        stack.pushAll(childrens as Array<N>);
       }
     }
   }

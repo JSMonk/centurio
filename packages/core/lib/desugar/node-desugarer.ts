@@ -1,23 +1,23 @@
 import { AstNode } from "../parser/ast-node";
 
-export type TransformerFunction<T extends string, R extends AstNode<T>> = (
-  node: AstNode<T>
-) => R;
+export type TransformerFunction<T, N extends AstNode<T>> = (
+  node: N
+) => AstNode<T>;
 
-export type DesugarerOpts<T extends string, R extends AstNode<T>> = {
+export type DesugarerOpts<T, N extends AstNode<T>> = {
   type: T;
-  map: TransformerFunction<T, R>;
+  map: TransformerFunction<T, N>;
 };
 
-export class NodeDesugarer<T extends string, R extends AstNode<T>> {
-  public static forNode<T extends string, R extends AstNode<T>>(
-    opts: DesugarerOpts<T, R>
+export class NodeDesugarer<T, N extends AstNode<T>> {
+  public static forNode<T, N extends AstNode<T>>(
+    opts: DesugarerOpts<T, N>
   ) {
-    return new NodeDesugarer<T, R>(opts.type, opts.map);
+    return new NodeDesugarer<T, N>(opts.type, opts.map);
   }
 
   private constructor(
     public readonly type: T,
-    public readonly tranformerFunction: TransformerFunction<T, R>
+    public readonly tranformerFunction: TransformerFunction<T, N>
   ) {}
 }

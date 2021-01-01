@@ -1,14 +1,14 @@
 import { InvalidStateError } from "../errors/invalid-state-error";
 import { AstNode } from "../parser/ast-node";
 
-export type VisitorOpts<T extends string, K extends string> = {
+export type VisitorOpts<T, K extends string> = {
   type: T;
   children: K[];
 };
-type Node<T extends string, K extends string> = AstNode<T> & Record<K, unknown>;
+type Node<T, K extends string> = AstNode<T> & Record<K, unknown>;
 
-export class ChildrenVisitor<T extends string, K extends string> {
-  public static forNode<T extends string, K extends string = string>(
+export class ChildrenVisitor<T, K extends string> {
+  public static forNode<T, K extends string = string>(
     opts: VisitorOpts<T, K>
   ): ChildrenVisitor<T, K> {
     return new ChildrenVisitor<T, K>(opts.type, opts.children);
