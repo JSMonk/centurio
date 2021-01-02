@@ -1,4 +1,4 @@
-import * as tokens from "./guu-token";
+import * as tokens from "./tinyjs-token";
 
 export type TokenCallback<T extends tokens.Token> = (token: T) => void;
 export type NextHandler =
@@ -7,7 +7,7 @@ export type NextHandler =
 
 const DEFAULT_CALLBACK = (_: tokens.Token) => null;
 
-export class GuuSyntax {
+export class TinyJSSyntax {
   private identifierCallback: TokenCallback<tokens.IdentifierToken> = DEFAULT_CALLBACK;
   private numberCallback: TokenCallback<tokens.NumberToken> = DEFAULT_CALLBACK;
   private printCallback: TokenCallback<tokens.PrintToken> = DEFAULT_CALLBACK;
@@ -57,13 +57,9 @@ export class GuuSyntax {
         this.assertNotEOF(potentialSubprogramStart);
         this.assertSubprogramBodyToken(potentialSubprogramStart);
         const statementOrSubprogram = (token: tokens.Token) => {
-          if (token instanceof tokens.EndOfFile) {
+          if (token instanceof tokens.SubprogramBodyEndToken) {
             this.subprogramCallback(potentialSub);
-            return null;
-          }
-          if (token instanceof tokens.SubprogramToken) {
-            this.subprogramCallback(potentialSub);
-            return this.subprogramHandler(token);
+            return (token: tokens.Token) => this.subprogramHandler(token);
           }
           return this.statementHandler(token, statementOrSubprogram);
         };
@@ -227,7 +223,27 @@ export class GuuSyntax {
     this.assert(token !== undefined, new Error("never"));
     this.assert(
       token instanceof tokens.SubprogramBodyStartToken,
-      new SyntaxError("':' missed after procedure declaration")
+      new SyntaxError("'{' missed after procedure declaration")
+    );
+  }
+
+  private assertSubprogramBodyEndToken(
+    token: tokens.Token | undefined
+  ): asserts token is tokens.SubprogramBodyEndToken {
+    this.assert(token !== undefined, new Error("never"));
+    this.assert(
+      token instanceof tokens.SubprogramBodyEndToken,
+      new SyntaxError("'}' missed after procedure declaration end")
+    );
+  }
+
+  private isStatement(
+    token: tokens.Token | undefined
+  ): token is tokens.CallToken | tokens.PrintToken | tokens.SetToken {
+    return (
+      token instanceof tokens.CallToken ||
+      token instanceof tokens.PrintToken ||
+      token instanceof tokens.SetToken
     );
   }
 
@@ -238,7 +254,7 @@ export class GuuSyntax {
     this.assert(
       token instanceof tokens.CallToken ||
         token instanceof tokens.PrintToken ||
-        tokens.SetToken,
+        token instanceof tokens.SetToken,
       new SyntaxError(
         "Only statements like (set, call or print) available here"
       )

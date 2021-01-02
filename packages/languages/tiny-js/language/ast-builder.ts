@@ -1,14 +1,14 @@
-import * as nodes from "./guu-node";
-import * as tokens from "./guu-token";
-import { GuuSyntax } from "./syntax-state-machine";
+import * as nodes from "./tinyjs-node";
+import * as tokens from "./tinyjs-token";
+import { TinyJSSyntax } from "./syntax-state-machine";
 import { AstBuilder } from "../../../core/lib/parser/ast-builder";
 import type { NextHandler } from "./syntax-state-machine";
-import type { Node as GuuNode } from "./guu-node";
-import type { Token as GuuToken } from "./guu-token";
+import type { Node as TinyJSNode } from "./tinyjs-node";
+import type { Token as TinyJSToken } from "./tinyjs-token";
 
-export class GuuAstBuilder implements AstBuilder<GuuToken, GuuNode> {
-  private stack: Array<GuuNode> = [];
-  private readonly syntax: GuuSyntax = new GuuSyntax();
+export class TinyJSAstBuilder implements AstBuilder<TinyJSToken, TinyJSNode> {
+  private stack: Array<TinyJSNode> = [];
+  private readonly syntax: TinyJSSyntax = new TinyJSSyntax();
   private currentTokenHandler: NextHandler = this.syntax.getInitialHandler();
 
   constructor() {
@@ -29,7 +29,7 @@ export class GuuAstBuilder implements AstBuilder<GuuToken, GuuNode> {
     return this.createProgram();
   }
 
-  consumeToken(token: GuuToken): boolean {
+  consumeToken(token: TinyJSToken): boolean {
     if (this.currentTokenHandler === null) {
       return false;
     }
@@ -37,8 +37,8 @@ export class GuuAstBuilder implements AstBuilder<GuuToken, GuuNode> {
     return true;
   }
 
-  private createProgram(): nodes.GuuProgram {
-    const declarations: Array<nodes.GuuProcedureDeclaration> = new Array(
+  private createProgram(): nodes.TinyJSProgram {
+    const declarations: Array<nodes.TinyJSProcedureDeclaration> = new Array(
       this.stack.length
     );
     for (let i = 0; i < this.stack.length; i++) {
@@ -46,7 +46,7 @@ export class GuuAstBuilder implements AstBuilder<GuuToken, GuuNode> {
       this.assertProcedureDeclaration(declaration);
       declarations[i] = declaration;
     }
-    return new nodes.GuuProgram(declarations);
+    return new nodes.TinyJSProgram(declarations);
   }
 
   private pushProcedureDeclaration() {
@@ -56,26 +56,26 @@ export class GuuAstBuilder implements AstBuilder<GuuToken, GuuNode> {
     while (
       this.stack.length !== 0 &&
       currentStatement !== undefined &&
-      !(currentStatement instanceof nodes.GuuIdentifier)
+      !(currentStatement instanceof nodes.TinyJSIdentifier)
     ) {
       this.assertStatement(currentStatement);
       statements.unshift(currentStatement);
       currentStatement = this.stack.pop();
     }
-    if (!(currentStatement instanceof nodes.GuuIdentifier)) {
+    if (!(currentStatement instanceof nodes.TinyJSIdentifier)) {
       return;
     }
     this.stack.push(
-      new nodes.GuuProcedureDeclaration(currentStatement, statements)
+      new nodes.TinyJSProcedureDeclaration(currentStatement, statements)
     );
   }
 
   private pushNumberNode(token: tokens.NumberToken) {
-    this.stack.push(new nodes.GuuNumber(token.text));
+    this.stack.push(new nodes.TinyJSNumber(token.text));
   }
 
   private pushIdentifierNode(token: tokens.IdentifierToken) {
-    this.stack.push(new nodes.GuuIdentifier(token.name));
+    this.stack.push(new nodes.TinyJSIdentifier(token.name));
   }
 
   private pushCallStatement() {
@@ -105,37 +105,37 @@ export class GuuAstBuilder implements AstBuilder<GuuToken, GuuNode> {
   }
 
   private assertExpression(
-    node: GuuNode | undefined
+    node: TinyJSNode | undefined
   ): asserts node is nodes.Expression {
     this.assert(node !== undefined, new Error("never"));
     this.assert(
-      node instanceof nodes.GuuIdentifier || node instanceof nodes.GuuNumber,
+      node instanceof nodes.TinyJSIdentifier || node instanceof nodes.TinyJSNumber,
       new SyntaxError("Only expressions available here!")
     );
   }
 
   private assertIdentifier(
-    node: GuuNode | undefined
-  ): asserts node is nodes.GuuIdentifier {
+    node: TinyJSNode | undefined
+  ): asserts node is nodes.TinyJSIdentifier {
     this.assert(node !== undefined, new Error("never"));
     this.assert(
-      node instanceof nodes.GuuIdentifier,
+      node instanceof nodes.TinyJSIdentifier,
       new SyntaxError("Only identifiers available here!")
     );
   }
 
   private assertProcedureDeclaration(
-    node: GuuNode | undefined
-  ): asserts node is nodes.GuuProcedureDeclaration {
+    node: TinyJSNode | undefined
+  ): asserts node is nodes.TinyJSProcedureDeclaration {
     this.assert(node !== undefined, new Error("never"));
     this.assert(
-      node instanceof nodes.GuuProcedureDeclaration,
+      node instanceof nodes.TinyJSProcedureDeclaration,
       new SyntaxError("Only procedure declarations available here!")
     );
   }
 
   private assertStatement(
-    node: GuuNode | undefined
+    node: TinyJSNode | undefined
   ): asserts node is nodes.Statement {
     this.assert(node !== undefined, new Error("never"));
     this.assert(

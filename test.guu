@@ -1,7 +1,9 @@
-sub main:
+function main {
   set a 2
   call test
   print a
+}
 
-sub test:
+function test {
   set a 3
+}

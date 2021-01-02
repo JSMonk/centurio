@@ -1,4 +1,4 @@
-export const enum GuuASTNodeType {
+export const enum TinyJSASTNodeType {
   ASSIGNMENT = "AssignmentStatement",
   PRINT = "PrintStatement",
   PROCEDURE_DECLARATION = "ProcedureDeclaration",

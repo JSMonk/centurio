@@ -2,28 +2,28 @@ import { readFile } from "../../../core/lib/parser/file";
 import { AstStream } from "../../../core/lib/parser/ast-stream";
 import { Traverser } from "../../../core/lib/traversing/traverser";
 import { WordStream } from "../../../core/lib/parser/word-stream";
-import { GuuTokenizer } from "./guu-tokenizer";
+import { TinyJSTokenizer } from "./tinyjs-tokenizer";
 import { TokensStream } from "../../../core/lib/parser/tokens-stream";
-import { GuuAstBuilder } from "./ast-builder";
-import { GuuASTNodeType } from "./guu-node-type";
+import { TinyJSAstBuilder } from "./ast-builder";
+import { TinyJSASTNodeType } from "./tinyjs-node-type";
 import { LanguageAnalyzer } from "../../../core/lib/analysis/language-analyzer";
-import { GuuAnalysisContext } from "./guu-analysis-context";
+import { TinyJSAnalysisContext } from "./tinyjs-analysis-context";
 import {
-  GuuBlock,
-  GuuFunctionDeclaration,
-  GuuProcedureDeclaration,
-} from "./guu-node";
-import type { Node as GuuNode } from "./guu-node";
-import type { GuuVisitorRegistry } from "./visitor-registry";
+  TinyJSBlock,
+  TinyJSFunctionDeclaration,
+  TinyJSProcedureDeclaration,
+} from "./tinyjs-node";
+import type { Node as TinyJSNode } from "./tinyjs-node";
+import type { TinyJSVisitorRegistry } from "./visitor-registry";
 import { VisitorsRegistry } from "../../../core/lib/traversing/visitors-registry";
 
-export class GuuLanguageAnalyzer<
-  C extends GuuAnalysisContext
+export class TinyJSLanguageAnalyzer<
+  C extends TinyJSAnalysisContext
 > extends LanguageAnalyzer<C> {
   public async analyze(path: string): Promise<void> {
     const program = await this.parse(path);
 
-    const registry: GuuVisitorRegistry<C> = VisitorsRegistry.create();
+    const registry: TinyJSVisitorRegistry<C> = VisitorsRegistry.create();
     this.defineDesugaringRules(registry);
     this.defineAstTraversingRules(registry);
 
@@ -37,51 +37,51 @@ export class GuuLanguageAnalyzer<
     traverser.startTraversing();
   }
 
-  private parse(path: string): Promise<GuuNode> {
+  private parse(path: string): Promise<TinyJSNode> {
     return readFile(path, "utf8")
       .pipe(new WordStream(/[\s\t\n]/, /:/))
-      .pipe(new TokensStream(new GuuTokenizer()))
-      .pipe(new AstStream(new GuuAstBuilder()))
+      .pipe(new TokensStream(new TinyJSTokenizer()))
+      .pipe(new AstStream(new TinyJSAstBuilder()))
       .getProgram();
   }
 
-  private defineDesugaringRules(registry: GuuVisitorRegistry<C>) {
+  private defineDesugaringRules(registry: TinyJSVisitorRegistry<C>) {
     return registry.desugarWhen({
-      type: GuuASTNodeType.PROCEDURE_DECLARATION,
-      map(node: GuuProcedureDeclaration): GuuFunctionDeclaration {
-        return new GuuFunctionDeclaration(
+      type: TinyJSASTNodeType.PROCEDURE_DECLARATION,
+      map(node: TinyJSProcedureDeclaration): TinyJSFunctionDeclaration {
+        return new TinyJSFunctionDeclaration(
           node.identifier,
           [],
-          new GuuBlock(node.body)
+          new TinyJSBlock(node.body)
         );
       },
     });
   }
 
-  private defineAstTraversingRules(registry: GuuVisitorRegistry<C>) {
+  private defineAstTraversingRules(registry: TinyJSVisitorRegistry<C>) {
     return registry
       .traverseIn({
-        type: GuuASTNodeType.SOURCE_FILE,
+        type: TinyJSASTNodeType.SOURCE_FILE,
         children: ["declarations"],
       })
       .traverseIn({
-        type: GuuASTNodeType.BLOCK,
+        type: TinyJSASTNodeType.BLOCK,
         children: ["statements"],
       })
       .traverseIn({
-        type: GuuASTNodeType.PRINT,
+        type: TinyJSASTNodeType.PRINT,
         children: ["argument"],
       })
       .traverseIn({
-        type: GuuASTNodeType.ASSIGNMENT,
+        type: TinyJSASTNodeType.ASSIGNMENT,
         children: ["value"],
       })
       .traverseIn({
-        type: GuuASTNodeType.PROCEDURE_DECLARATION,
+        type: TinyJSASTNodeType.PROCEDURE_DECLARATION,
         children: ["body"],
       })
       .traverseIn({
-        type: GuuASTNodeType.FUNCTION_DECLARATION,
+        type: TinyJSASTNodeType.FUNCTION_DECLARATION,
         children: ["body"],
       });
   }
