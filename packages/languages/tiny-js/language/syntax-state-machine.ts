@@ -11,8 +11,8 @@ export class TinyJSSyntax {
   private identifierCallback: TokenCallback<tokens.IdentifierToken> = DEFAULT_CALLBACK;
   private numberCallback: TokenCallback<tokens.NumberToken> = DEFAULT_CALLBACK;
   private printCallback: TokenCallback<tokens.PrintToken> = DEFAULT_CALLBACK;
-  private callCallback: TokenCallback<tokens.CallToken> = DEFAULT_CALLBACK;
-  private setCallback: TokenCallback<tokens.SetToken> = DEFAULT_CALLBACK;
+  private callCallback: TokenCallback<tokens.IdentifierToken> = DEFAULT_CALLBACK;
+  private equalsCallback: TokenCallback<tokens.EqualsToken> = DEFAULT_CALLBACK;
   private subprogramCallback: TokenCallback<tokens.SubprogramToken> = DEFAULT_CALLBACK;
 
   handleSubprogramBy(callback: TokenCallback<tokens.SubprogramToken>) {
@@ -23,11 +23,11 @@ export class TinyJSSyntax {
     this.printCallback = callback;
   }
 
-  handleSetBy(callback: TokenCallback<tokens.SetToken>) {
-    this.setCallback = callback;
+  handleEqualsBy(callback: TokenCallback<tokens.EqualsToken>) {
+    this.equalsCallback = callback;
   }
 
-  handleCallBy(callback: TokenCallback<tokens.CallToken>) {
+  handleCallBy(callback: TokenCallback<tokens.IdentifierToken>) {
     this.callCallback = callback;
   }
 
@@ -51,35 +51,56 @@ export class TinyJSSyntax {
   private subprogramHandler(potentialSub: tokens.Token): NextHandler {
     this.assertSubToken(potentialSub);
     return (potentialIdentifier: tokens.Token) => {
-      this.assertNotEOF(potentialIdentifier);
       this.identifierHandler(potentialIdentifier);
       return (potentialSubprogramStart: tokens.Token) => {
-        this.assertNotEOF(potentialSubprogramStart);
         this.assertSubprogramBodyToken(potentialSubprogramStart);
         const statementOrSubprogram = (token: tokens.Token) => {
-          if (token instanceof tokens.SubprogramBodyEndToken) {
-            this.subprogramCallback(potentialSub);
-            return (token: tokens.Token) => this.subprogramHandler(token);
+          if (this.isStatement(token)) {
+            return this.statementHandler(token, statementOrSubprogram);
           }
-          return this.statementHandler(token, statementOrSubprogram);
+          this.assertSubprogramBodyEndToken(token);
+          this.subprogramCallback(potentialSub);
+          return this.getInitialHandler();
         };
         return statementOrSubprogram;
       };
     };
   }
 
-  private setHandler(
-    potentialSet: tokens.Token,
+  private callOrEqualsHandler(
+    potentialIdentifier: tokens.Token,
     next?: NextHandler
   ): NextHandler {
-    this.assertSetToken(potentialSet);
-    return (potentialIdentifier: tokens.Token) => {
-      this.assertNotEOF(potentialIdentifier);
+    this.assertIdentifierToken(potentialIdentifier);
+    return (equalsOrParenthes: tokens.Token) => {
+      if (equalsOrParenthes instanceof tokens.EqualsToken) {
+        return this.equalsHandler(potentialIdentifier, next)(
+          equalsOrParenthes,
+          next
+        );
+      }
+      if (equalsOrParenthes instanceof tokens.LeftParanthes) {
+        return this.callHandler(potentialIdentifier, next)(
+          equalsOrParenthes,
+          next
+        );
+      }
+      throw new SyntaxError(
+        `Unexpected token: ${equalsOrParenthes.constructor.name}`
+      );
+    };
+  }
+
+  private equalsHandler(
+    potentialIdentifier: tokens.Token,
+    next?: NextHandler
+  ): NextHandler {
+    this.identifierHandler(potentialIdentifier);
+    return (potentialEquals: tokens.Token) => {
+      this.assertEqualsToken(potentialEquals);
       return (potentialExpression: tokens.Token) => {
-        this.assertNotEOF(potentialExpression);
-        this.identifierHandler(potentialIdentifier);
         this.expressionHandler(potentialExpression);
-        this.setCallback(potentialSet);
+        this.equalsCallback(potentialEquals);
         return next ?? null;
       };
     };
@@ -89,12 +110,14 @@ export class TinyJSSyntax {
     potentialCall: tokens.Token,
     next?: NextHandler
   ): NextHandler {
-    this.assertCallToken(potentialCall);
-    return (potentialIdentifier: tokens.Token) => {
-      this.assertNotEOF(potentialIdentifier);
-      this.identifierHandler(potentialIdentifier);
-      this.callCallback(potentialCall);
-      return next ?? null;
+    this.identifierHandler(potentialCall);
+    return (potentialLeftParenthes: tokens.Token) => {
+      this.assertLeftParanthes(potentialLeftParenthes);
+      return (potentialRightParenthes: tokens.Token) => {
+        this.assertRightParanthes(potentialRightParenthes);
+        this.callCallback(potentialCall as tokens.IdentifierToken);
+        return next ?? null;
+      };
     };
   }
 
@@ -103,11 +126,16 @@ export class TinyJSSyntax {
     next?: NextHandler
   ): NextHandler {
     this.assertPrintToken(potentialPrint);
-    return (potentialExpression: tokens.Token) => {
-      this.assertNotEOF(potentialExpression);
-      this.expressionHandler(potentialExpression);
-      this.printCallback(potentialPrint);
-      return next ?? null;
+    return (potentialLeftParenthes: tokens.Token) => {
+      this.assertLeftParanthes(potentialLeftParenthes);
+      return (potentialExpression: tokens.Token) => {
+        this.expressionHandler(potentialExpression);
+        return (potentialRightParenthes: tokens.Token) => {
+          this.assertRightParanthes(potentialRightParenthes);
+          this.printCallback(potentialPrint);
+          return next ?? null;
+        };
+      };
     };
   }
 
@@ -145,11 +173,8 @@ export class TinyJSSyntax {
     next?: NextHandler
   ): NextHandler {
     this.assertStatementToken(token);
-    if (token instanceof tokens.SetToken) {
-      return this.setHandler(token, next);
-    }
-    if (token instanceof tokens.CallToken) {
-      return this.callHandler(token, next);
+    if (token instanceof tokens.IdentifierToken) {
+      return this.callOrEqualsHandler(token, next);
     }
     if (token instanceof tokens.PrintToken) {
       return this.printHandler(token, next);
@@ -187,23 +212,13 @@ export class TinyJSSyntax {
     );
   }
 
-  private assertCallToken(
+  private assertEqualsToken(
     token: tokens.Token | undefined
-  ): asserts token is tokens.CallToken {
+  ): asserts token is tokens.EqualsToken {
     this.assert(token !== undefined, new Error("never"));
     this.assert(
-      token instanceof tokens.CallToken,
-      new SyntaxError("Only call available here!")
-    );
-  }
-
-  private assertSetToken(
-    token: tokens.Token | undefined
-  ): asserts token is tokens.SetToken {
-    this.assert(token !== undefined, new Error("never"));
-    this.assert(
-      token instanceof tokens.SetToken,
-      new SyntaxError("Only set available here!")
+      token instanceof tokens.EqualsToken,
+      new SyntaxError("Only = available here!")
     );
   }
 
@@ -239,24 +254,22 @@ export class TinyJSSyntax {
 
   private isStatement(
     token: tokens.Token | undefined
-  ): token is tokens.CallToken | tokens.PrintToken | tokens.SetToken {
+  ): token is tokens.IdentifierToken | tokens.PrintToken {
     return (
-      token instanceof tokens.CallToken ||
-      token instanceof tokens.PrintToken ||
-      token instanceof tokens.SetToken
+      token instanceof tokens.IdentifierToken ||
+      token instanceof tokens.PrintToken
     );
   }
 
   private assertStatementToken(
     token: tokens.Token | undefined
-  ): asserts token is tokens.CallToken | tokens.PrintToken | tokens.SetToken {
+  ): asserts token is tokens.IdentifierToken | tokens.PrintToken {
     this.assert(token !== undefined, new Error("never"));
     this.assert(
-      token instanceof tokens.CallToken ||
-        token instanceof tokens.PrintToken ||
-        token instanceof tokens.SetToken,
+      token instanceof tokens.IdentifierToken ||
+        token instanceof tokens.PrintToken,
       new SyntaxError(
-        "Only statements like (set, call or print) available here"
+        "Only statements like (call, assignment or print) available here"
       )
     );
   }
@@ -269,6 +282,24 @@ export class TinyJSSyntax {
       token instanceof tokens.NumberToken ||
         token instanceof tokens.IdentifierToken,
       new SyntaxError("Only expressions available here!")
+    );
+  }
+
+  private assertLeftParanthes(
+    token: tokens.Token
+  ): asserts token is tokens.LeftParanthes {
+    this.assert(
+      token instanceof tokens.LeftParanthes,
+      new SyntaxError("Wanted left parthenest!")
+    );
+  }
+
+  private assertRightParanthes(
+    token: tokens.Token
+  ): asserts token is tokens.RightParanthes {
+    this.assert(
+      token instanceof tokens.RightParanthes,
+      new SyntaxError("Wanted right parthenest!")
     );
   }
 

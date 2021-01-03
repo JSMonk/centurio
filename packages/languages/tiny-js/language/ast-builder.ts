@@ -12,7 +12,7 @@ export class TinyJSAstBuilder implements AstBuilder<TinyJSToken, TinyJSNode> {
   private currentTokenHandler: NextHandler = this.syntax.getInitialHandler();
 
   constructor() {
-    this.syntax.handleSetBy(() => this.pushSetStatement());
+    this.syntax.handleEqualsBy(() => this.pushEqualsStatement());
     this.syntax.handleCallBy(() => this.pushCallStatement());
     this.syntax.handlePrintBy(() => this.pushPrintStatement());
     this.syntax.handleIdentifierBy((token) => this.pushIdentifierNode(token));
@@ -90,7 +90,7 @@ export class TinyJSAstBuilder implements AstBuilder<TinyJSToken, TinyJSNode> {
     this.stack.push(new nodes.PrintStatement(argument));
   }
 
-  private pushSetStatement() {
+  private pushEqualsStatement() {
     const value = this.stack.pop();
     this.assertExpression(value);
     const identifier = this.stack.pop();

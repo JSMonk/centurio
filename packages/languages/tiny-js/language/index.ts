@@ -39,7 +39,7 @@ export class TinyJSLanguageAnalyzer<
 
   private parse(path: string): Promise<TinyJSNode> {
     return readFile(path, "utf8")
-      .pipe(new WordStream(/[\s\t\n]/, /:/))
+      .pipe(new WordStream(/[\s\t\n]/, /[\(\)\{\}=]/))
       .pipe(new TokensStream(new TinyJSTokenizer()))
       .pipe(new AstStream(new TinyJSAstBuilder()))
       .getProgram();

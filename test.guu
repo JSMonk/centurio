@@ -1,9 +1,0 @@
-function main {
-  set a 2
-  call test
-  print a
-}
-
-function test {
-  set a 3
-}

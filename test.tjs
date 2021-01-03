@@ -1,0 +1,9 @@
+function main {
+  a = 2
+  test()
+  print(a)
+}
+
+function test {
+  a = 3
+}

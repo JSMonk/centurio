@@ -5,7 +5,7 @@ import { TypeScriptDefinitionsAnalyzer } from "./packages/languages/typescript/t
 
 (async () => {
   const typeDefinitionPath = "./test-type-system.d.ts";
-  const testTargetFile = "./test.guu";
+  const testTargetFile = "./test.tjs";
 
   const context: AnalysisContext<CheckedError> = {
     errors: [],

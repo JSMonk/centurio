@@ -1,6 +1,7 @@
 export class EndOfFile {}
-export class SetToken {}
-export class CallToken {}
+export class EqualsToken {}
+export class LeftParanthes {}
+export class RightParanthes {}
 export class PrintToken {}
 export class SubprogramToken {}
 export class SubprogramBodyStartToken {}
@@ -10,8 +11,9 @@ export class IdentifierToken { constructor(public readonly name: string) {} }
 
 export type Token = 
   | EndOfFile
-  | SetToken
-  | CallToken
+  | EqualsToken
+  | LeftParanthes
+  | RightParanthes
   | PrintToken
   | SubprogramToken
   | SubprogramBodyStartToken

@@ -6,10 +6,8 @@ import type { Token as TinyJSToken } from "./tinyjs-token";
 export class TinyJSTokenizer implements Tokenizer<TinyJSToken> {
   getTokenFor(lexeme: string): TinyJSToken | null {
     switch (true) {
-      case this.isSetKeyword(lexeme):
-        return new token.SetToken();
-      case this.isCallKeyword(lexeme):
-        return new token.CallToken();
+      case this.isEqualsKeyword(lexeme):
+        return new token.EqualsToken();
       case this.isPrintKeyword(lexeme):
         return new token.PrintToken();
       case this.isSubProgramKeyword(lexeme):
@@ -22,6 +20,10 @@ export class TinyJSTokenizer implements Tokenizer<TinyJSToken> {
         return new token.NumberToken(lexeme);
       case this.isIdentifierLexeme(lexeme):
         return new token.IdentifierToken(lexeme);
+      case this.isLeftParenthes(lexeme):
+        return new token.LeftParanthes();
+      case this.isRightParenthes(lexeme):
+        return new token.RightParanthes();
     }
     return null;
   }
@@ -34,19 +36,29 @@ export class TinyJSTokenizer implements Tokenizer<TinyJSToken> {
     return /^\d+$/gi.test(lexeme);
   }
 
-  private isSetKeyword(lexeme: string): lexeme is TinyJSKeyword.SET {
-    return lexeme === TinyJSKeyword.SET;
+  private isEqualsKeyword(lexeme: string): lexeme is TinyJSKeyword.EQUALS {
+    return lexeme === TinyJSKeyword.EQUALS;
   }
 
-  private isCallKeyword(lexeme: string): lexeme is TinyJSKeyword.CALL {
-    return lexeme === TinyJSKeyword.CALL;
+  private isLeftParenthes(
+    lexeme: string
+  ): lexeme is TinyJSKeyword.LEFT_PARENTHESES {
+    return lexeme === TinyJSKeyword.LEFT_PARENTHESES;
+  }
+
+  private isRightParenthes(
+    lexeme: string
+  ): lexeme is TinyJSKeyword.RIGHT_PARENTHESES {
+    return lexeme === TinyJSKeyword.RIGHT_PARENTHESES;
   }
 
   private isPrintKeyword(lexeme: string): lexeme is TinyJSKeyword.PRINT {
     return lexeme === TinyJSKeyword.PRINT;
   }
 
-  private isSubProgramKeyword(lexeme: string): lexeme is TinyJSKeyword.SUBPROGRAM {
+  private isSubProgramKeyword(
+    lexeme: string
+  ): lexeme is TinyJSKeyword.SUBPROGRAM {
     return lexeme === TinyJSKeyword.SUBPROGRAM;
   }
 
