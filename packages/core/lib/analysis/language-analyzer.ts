@@ -1,13 +1,15 @@
 import { CheckedError } from "../errors/checked-error";
 import { AnalysisContext } from "./analysis-context";
+import { VisitorsRegistry } from "../traversing/visitors-registry";
 import { InvalidOperationError } from "../errors";
 
 export abstract class LanguageAnalyzer<
+  T,
   C extends AnalysisContext<CheckedError>
 > {
-  static with<C extends AnalysisContext<CheckedError>>(
+  static with<T, C extends AnalysisContext<CheckedError>>(
     context: C
-  ): LanguageAnalyzer<C> {
+  ): LanguageAnalyzer<T, C> {
     if (this === LanguageAnalyzer) {
       throw new InvalidOperationError(
         "Can't create instance of abstract class!"
@@ -17,7 +19,10 @@ export abstract class LanguageAnalyzer<
     return new this(context);
   }
 
-  protected constructor(protected readonly context: C) {}
+  protected constructor(
+    protected readonly context: C,
+    public readonly visitor: VisitorsRegistry<T, C>
+  ) {}
 
   abstract analyze(path: string): void | Promise<void>;
 }

@@ -1,5 +1,12 @@
 type TSNumber = number;
-type TSString = string;
 
-export type number = { name: "number" };
-export type string = { name: "string" };
+export type integer = {
+  name: "integer";
+};
+
+export type integer_literal = {
+  literal: true;
+  typeof: "number";
+  name: "integer literal";
+  supertypes: [integer];
+};

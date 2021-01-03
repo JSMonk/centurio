@@ -2,11 +2,12 @@ import { readFile } from "../../../core/lib/parser/file";
 import { AstStream } from "../../../core/lib/parser/ast-stream";
 import { Traverser } from "../../../core/lib/traversing/traverser";
 import { WordStream } from "../../../core/lib/parser/word-stream";
-import { TinyJSTokenizer } from "./tinyjs-tokenizer";
 import { TokensStream } from "../../../core/lib/parser/tokens-stream";
+import { TinyJSTokenizer } from "./tinyjs-tokenizer";
 import { TinyJSAstBuilder } from "./ast-builder";
-import { TinyJSASTNodeType } from "./tinyjs-node-type";
 import { LanguageAnalyzer } from "../../../core/lib/analysis/language-analyzer";
+import { VisitorsRegistry } from "../../../core/lib/traversing/visitors-registry";
+import { TinyJSASTNodeType } from "./tinyjs-node-type";
 import { TinyJSAnalysisContext } from "./tinyjs-analysis-context";
 import {
   TinyJSBlock,
@@ -15,7 +16,6 @@ import {
 } from "./tinyjs-node";
 import type { Node as TinyJSNode } from "./tinyjs-node";
 import type { TinyJSVisitorRegistry } from "./visitor-registry";
-import { VisitorsRegistry } from "../../../core/lib/traversing/visitors-registry";
 
 export class TinyJSLanguageAnalyzer<
   C extends TinyJSAnalysisContext

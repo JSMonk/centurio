@@ -1,5 +1,6 @@
 import { CheckedError } from "../errors/checked-error";
-import type { Type } from "../analysis/types/type";
+import type { Type } from "../type-checking/interfaces/type";
+import type { Scope } from "../type-checking/interfaces/scope";
 
 export type TypeRegistry = Map<string, Type<object>>;
 
@@ -9,5 +10,6 @@ export interface LanguageContext {
 
 export interface AnalysisContext<E extends CheckedError> {
   errors: Array<E>;
-  language: LanguageContext
+  scope: Scope;
+  language: LanguageContext;
 }
