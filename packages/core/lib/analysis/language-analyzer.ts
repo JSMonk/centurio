@@ -19,10 +19,9 @@ export abstract class LanguageAnalyzer<
     return new this(context);
   }
 
-  protected constructor(
-    protected readonly context: C,
-    public readonly visitor: VisitorsRegistry<T, C>
-  ) {}
+  public readonly visitor: VisitorsRegistry<T, C> = VisitorsRegistry.create();
+
+  protected constructor(protected readonly context: C) {}
 
   abstract analyze(path: string): void | Promise<void>;
 }

@@ -8,7 +8,7 @@ export interface LanguageContext {
   types: TypeRegistry
 }
 
-export interface AnalysisContext<E extends CheckedError> {
+export interface AnalysisContext<E extends CheckedError = CheckedError> {
   errors: Array<E>;
   scope: Scope;
   language: LanguageContext;

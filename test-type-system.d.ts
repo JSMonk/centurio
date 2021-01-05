@@ -1,12 +1,11 @@
 type TSNumber = number;
 
 export type integer = {
-  name: "integer";
+  name: "int";
 };
 
 export type integer_literal = {
   literal: true;
-  typeof: "number";
-  name: "integer literal";
+  nodes: ["NumericLiteral"];
   supertypes: [integer];
 };

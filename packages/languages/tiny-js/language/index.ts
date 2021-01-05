@@ -19,11 +19,11 @@ import type { TinyJSVisitorRegistry } from "./visitor-registry";
 
 export class TinyJSLanguageAnalyzer<
   C extends TinyJSAnalysisContext
-> extends LanguageAnalyzer<C> {
+> extends LanguageAnalyzer<TinyJSASTNodeType, C> {
   public async analyze(path: string): Promise<void> {
     const program = await this.parse(path);
 
-    const registry: TinyJSVisitorRegistry<C> = VisitorsRegistry.create();
+    const registry: TinyJSVisitorRegistry<C> = this.visitor;
     this.defineDesugaringRules(registry);
     this.defineAstTraversingRules(registry);
 

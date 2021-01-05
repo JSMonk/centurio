@@ -6,7 +6,7 @@ import {
   Node as TSNode,
   TypeAliasDeclaration,
 } from "typescript";
-import { Type } from "../../../core/lib/analysis/types/type";
+import { Type } from "../../../core/lib/type-checking/interfaces/type";
 import { AstNode } from "../../../core/lib/parser/ast-node";
 import { Traverser } from "../../../core/lib/traversing/traverser";
 import { CheckedError } from "../../../core/lib/errors/checked-error";
@@ -16,11 +16,11 @@ import { VisitorsRegistry } from "../../../core/lib/traversing/visitors-registry
 
 export class TypeScriptDefinitionsAnalyzer<
   C extends AnalysisContext<CheckedError>
-> extends LanguageAnalyzer<C> {
+> extends LanguageAnalyzer<SyntaxKind, C> {
   public async analyze(path: string): Promise<void> {
     const program = this.parse(path);
 
-    const registry: VisitorsRegistry<SyntaxKind, C> = VisitorsRegistry.create();
+    const registry: VisitorsRegistry<SyntaxKind, C> = this.visitor;
     this.defineAstTraversingRules(registry);
     this.addTypesInLanguageContext(registry);
 
