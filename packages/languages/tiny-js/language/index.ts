@@ -26,6 +26,10 @@ export class TinyJSLanguageAnalyzer<
     const registry: TinyJSVisitorRegistry<C> = this.visitor;
     this.defineDesugaringRules(registry);
     this.defineAstTraversingRules(registry);
+    registry.analyse({
+      type: TinyJSASTNodeType.ASSIGNMENT,
+      analyze: console.log,
+    });
 
     const traverser = Traverser.create({
       context: this.context,

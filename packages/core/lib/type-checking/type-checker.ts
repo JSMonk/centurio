@@ -1,15 +1,20 @@
 import { AnalysisContext } from "../analysis/analysis-context";
 import { LanguageAnalyzer } from "../analysis/language-analyzer";
+import { DefinitionAnalyzer } from "../analysis/definitions-analyzer";
 
-type Engine<C extends AnalysisContext> = {
+type LanguageEngine<C extends AnalysisContext> = {
   with(ctx: C): LanguageAnalyzer<unknown, C>;
+};
+
+type DefinitionEngine<C extends AnalysisContext> = {
+  for(language: LanguageAnalyzer<unknown, C>, ctx: C): DefinitionAnalyzer<unknown, unknown, C>;
 };
 
 export type TypeCheckerOpts<C extends AnalysisContext> = {
   context: C;
   typesystem: string;
-  sourceEngine: Engine<C>;
-  definitionEngine: Engine<C>;
+  sourceEngine: LanguageEngine<C>;
+  definitionEngine: DefinitionEngine<C>;
 };
 
 export class TypeChecker<C extends AnalysisContext> {
@@ -23,16 +28,16 @@ export class TypeChecker<C extends AnalysisContext> {
   }
 
   private constructor(
-    private readonly sourceEngine: Engine<C>,
-    private readonly definitionEngine: Engine<C>,
+    private readonly sourceEngine: LanguageEngine<C>,
+    private readonly definitionEngine: DefinitionEngine<C>,
     private readonly initialContext: C,
     private readonly typesystemPath: string
   ) {}
 
   run(path: string) {
-    const definitions = this.definitionEngine.with(this.initialContext);
     const sources = this.sourceEngine.with(this.initialContext);
+    const definitions = this.definitionEngine.for(sources, this.initialContext);
     definitions.analyze(this.typesystemPath);
     sources.analyze(path);
-  }    
+  }
 }

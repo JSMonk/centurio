@@ -5,7 +5,7 @@ export type integer = {
 };
 
 export type integer_literal = {
-  literal: true;
-  nodes: ["NumericLiteral"];
+  name: "integer literal",
+  forNodes: ["NumericLiteral"];
   supertypes: [integer];
 };
